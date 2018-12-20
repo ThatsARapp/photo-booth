@@ -1,3 +1,4 @@
+
 /* 
  * This file is part of "photo-booth" 
  * Copyright (c) 2018 Philipp Trenz
@@ -17,7 +18,7 @@
  * You should have received a copy of the GNU General Public License 
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
-
+import fs from 'fs';
 import sharp from 'sharp';
 import gphoto2 from 'gphoto2';
 
@@ -112,7 +113,32 @@ class Camera {
 
 	}
 
-}
+        livePreview(callback) {
+                var self = this;
+
+                if (self.camera === undefined) {
+                        callback(-1, 'camera not initialized', null);
+                        return;
+                }
+               
+                
+	       self.camera.takePicture({ preview: true, targetPath:'/tmp/foo.XXXXXX' }, function (err, data) {
+
+                        if (err) {
+                                self.camera = undefined;        // needs to be reinitialized
+                                callback(-2, 'connection to camera failed', err);
+                                return;
+                        } 
+			fs.renameSync(data, __dirname + '/picture.jpg');
+			fs.chmodSync(__dirname + '/picture.jpg', '777');
+
+                        callback(0, __dirname + '/picture.jpg', null);
+			return;
+
+                });
+
+	}
+  }
 
 /*
  * Module exports for connection

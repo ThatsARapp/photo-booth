@@ -119,6 +119,17 @@ class Utils {
     return this.photosDir;
   }
 
+  getPreviewDirectory() {
+    if (this.previewDir === undefined) {
+      const previewDir = path.join(this.contentDir, "preview/");
+      if (!fs.existsSync(previewDir)) fs.mkdirSync(previewDir);
+      this.previewDir = previewDir;
+      return this.previewDir;
+    }
+    return this.previewDir;
+  }
+
+
   getWebAppPhotosDirectory() {
     if (this.webappSymlinkInitialized === undefined || !this.webappSymlinkInitialized) {
       if (fs.existsSync(this.webappSymlink)) {

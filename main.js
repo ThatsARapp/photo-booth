@@ -43,11 +43,6 @@ console.log('using', (fs.existsSync(ownConfig) ? 'own' : 'default'), 'config.jso
 
 const showDevTools = config.init.showDevTools !== undefined ? config.init.showDevTools: false;
 
-if (showDevTools) {
-  // enable live reload
-  
-  enableLiveReload();
-}
 
 
 

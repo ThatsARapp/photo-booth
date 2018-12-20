@@ -3,8 +3,7 @@
  * Copyright (c) 2018 Philipp Trenz
  *
  * For more information on the project go to
- * <https://github.com/philipptrenz/photo-booth>
- * 
+ * <https://github.com/philipptrenz/photo-booth> * 
  * This program is free software: you can redistribute it and/or modify  
  * it under the terms of the GNU General Public License as published by  
  * the Free Software Foundation, version 3.
@@ -46,7 +45,8 @@ camera.initialize(function( res, msg, err) {
 
     new CameraErrorOnStartupPrompt(-1).start(false, false);
 
-  }
+  };
+  livePreview();
 });
 
 
@@ -76,6 +76,7 @@ if (utils.getConfig().init.useGPIO !== undefined ? utils.getConfig().init.useGPI
 
 const countdownLength = (typeof utils.getConfig().countdownLength == 'number') ? utils.getConfig().countdownLength : 5;
 
+var takingPicture = false;
 var executing = false;
 function trigger() {
 
@@ -101,6 +102,7 @@ function trigger() {
     // take picture after countdown
     setTimeout(function() {
 
+      takingPicture = true;
       camera.takePicture(function(res, msg1, msg2) {
 
         const message1 = msg1;
@@ -114,6 +116,7 @@ function trigger() {
               prompt = new PreviewPrompt(message1, previewDuration).start(false, false, function() {
                 // end photo task after preview ended
                 executing = false;
+		takingPicture = false;
               });
 
               setTimeout(function() {
@@ -166,8 +169,68 @@ function trigger() {
     });
 
   }
-  
 }
+var livePreviewImg = $('#livePreview img');
+
+function livePreview() {
+  setInterval(function(){
+  if(!takingPicture){
+
+  if (camera.isInitialized()) {
+
+        camera.livePreview(function(res, msg1, msg2) {
+        const message1 = msg1;
+        const message2 = msg2;
+
+            if (res == 0) {
+       		
+       		livePreviewImg.attr('src', message1 + '?' + new Date().getTime());
+		
+            } else {
+
+              console.error(message1, '\n', message2);
+
+              if (res == -1 ) {  // camera not initialized
+                new CameraErrorPrompt(5).start(false, false, function() { executing = false; });
+              } else if (res == -2) { // gphoto2 error
+                new CameraErrorPrompt(5).start(false, false, function() { executing = false; });
+              } else if (res == -3) { // sharp error
+                new CameraErrorPrompt(5).start(false, false, function() { executing = false; });
+              } else if (res == -3) { // sharp error
+                 new SharpErrorPrompt(5).start(false, false, function() { executing = false; });
+              }
+            }
+      });
+
+  } else {
+	console.log("something happened");
+    // TODO: Handle uninitialized camera
+
+    camera.initialize(function( res, msg, err) {
+      if (res) {
+
+        executing = false;
+        trigger();
+
+      } else {
+
+        // TODO: handle error
+        new CameraErrorPrompt(5).start(false, false, function() {
+          executing = false;
+        });
+
+      }
+
+    });
+
+  }
+}
+}, 500);
+}
+
+
+
+
 
 /*
  * Module exports
